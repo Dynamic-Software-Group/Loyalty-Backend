@@ -12,7 +12,9 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(authorize -> {
-            authorize
-        })
+            //TODO: Make sure they are authenticated bewfore accessing these endpoints
+            // but they have to authenticate with their jwt token and it should somehow set the user authenticated
+        });
+        return http.build();
     }
 }
