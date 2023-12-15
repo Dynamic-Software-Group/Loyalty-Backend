@@ -11,6 +11,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/business")
 public class BusinessController {
+    private final UserRepository userRepository;
+
+    @Autowired
+    public BusinessController(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     @PostMapping("/create")
     public ResponseEntity<?> createBusiness(@RequestHeader(HttpHeaders.AUTHORIZATION) String jwt, @RequestBody String name, @RequestBody String description, @RequestBody String userId) {

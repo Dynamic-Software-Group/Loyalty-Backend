@@ -2,6 +2,7 @@ package dev.change.controllers;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import dev.change.services.data.storage.DataFacade;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.userdetails.User;
@@ -23,7 +24,6 @@ public class UserController {
         //TODO: auth w/ spring security
 
         final UserDetails details = userDetailsService.loadUserByUsername(user.getUsername());
-
         return ResponseEntity.ok("TODO");
     }
 }
