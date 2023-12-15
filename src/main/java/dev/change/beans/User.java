@@ -1,21 +1,31 @@
 package dev.change.beans;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import dev.change.services.data.Identifiable;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Entity
 @Getter
 @Setter
 @NoArgsConstructor
-public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private int id;
+public class User implements Identifiable<String> {
+    private String id;
     private String username;
     private String password;
+    private String email;
+    private List<String> authorities;
+    private String jwt;
+
+    @Override
+    @JsonIgnore
+    public String getId() {
+        return id;
+    }
+
+    public boolean hasAuthority(String authority) {
+        return authorities.contains(authority);
+    }
 }
