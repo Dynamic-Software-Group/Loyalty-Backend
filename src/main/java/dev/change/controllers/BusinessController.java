@@ -1,5 +1,7 @@
 package dev.change.controllers;
 
+import dev.change.services.authentication.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,7 +23,6 @@ public class BusinessController {
     @PostMapping("/create")
     public ResponseEntity<?> createBusiness(@RequestHeader(HttpHeaders.AUTHORIZATION) String jwt, @RequestBody String name, @RequestBody String description, @RequestBody String userId) {
         // get headers
-        
-
+        return null;
     }
 }
