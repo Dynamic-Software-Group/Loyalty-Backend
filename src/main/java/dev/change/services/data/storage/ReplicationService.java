@@ -16,7 +16,6 @@ public class ReplicationService {
         final String username = "admin";
         final String password = ""; // TODO: set password from discord
 
-        Class.forName("com.mysql.jdbc.Driver");
         conn = DriverManager.getConnection(url, username, password);
 
         conn.createStatement().execute("CREATE TABLE IF NOT EXISTS data (email TEXT PRIMARY KEY, data JSON)");

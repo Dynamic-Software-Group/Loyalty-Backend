@@ -6,4 +6,8 @@ import dev.change.services.data.impl.RedisRepositoryImpl;
 
 public class BusinessRepositoryImpl extends RedisRepositoryImpl<Business, String> implements BusinessRepository {
 
+    @Override
+    public void registerBusiness(Business business) {
+
+    }
 }

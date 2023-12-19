@@ -24,7 +24,7 @@ public class DataFacadeImpl<T> implements DataFacade<T> {
 
     {
         try {
-            conn = DriverManager.getConnection("url", "username", System.getenv("MYSQL_PASSWORD"));
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306", "newrelic", "K4f2yeOEZU");
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
