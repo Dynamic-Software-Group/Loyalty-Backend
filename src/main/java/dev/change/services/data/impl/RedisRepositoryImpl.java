@@ -65,15 +65,9 @@ public class RedisRepositoryImpl<T extends Identifiable<ID>, ID> implements Redi
         return Collections.emptyList();
     }
 
-    @NotNull
     @Override
     public Iterable<T> findAllById(@NotNull Iterable<ID> ids) {
-        Iterable<T> entities = null;
-        for (ID id : ids) {
-            entities = findAllById(ids);
-        }
-        assert entities != null;
-        return entities;
+        return null;
     }
 
     @Override
