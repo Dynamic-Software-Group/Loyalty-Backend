@@ -1,0 +1,15 @@
+name: Code Coverage Workflow
+
+on: [push]  # Trigger the workflow when code is pushed
+
+jobs:
+  report-coverage:
+    runs-on: ubuntu-latest  # Run the workflow on a Linux machine
+
+    steps:
+      - name: Report test coverage to DeepSource
+        uses: deepsourcelabs/test-coverage-action@master
+        with:
+          key: java
+          coverage-file: coverage.xml
+          dsn: ${{ secrets.DEEPSOURCE_DSN }}
