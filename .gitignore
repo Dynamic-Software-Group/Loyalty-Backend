@@ -1,4 +1,5 @@
 /target/*
+!/target/*.jar
 !/target/newrelic/
 .vscode
 .idea
