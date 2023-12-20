@@ -8,6 +8,6 @@ public class BusinessRepositoryImpl extends RedisRepositoryImpl<Business, String
 
     @Override
     public void registerBusiness(Business business) {
-
+        save(business);
     }
 }

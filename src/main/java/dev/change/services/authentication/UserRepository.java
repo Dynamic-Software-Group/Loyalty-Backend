@@ -13,7 +13,10 @@ public interface UserRepository extends RedisRepository<User, String> {
     boolean checkPassword(String email, String password);
     User register(String email, String password);
     User login(String email, String password);
+    boolean authenticated(String email, String password);
     boolean verifyJwt(String jwt);
-    Map<String, Object> decodeJwt(String jwt);
+    User decodeJwt(String jwt);
     boolean hasAuthority(String jwt, String authority);
+    void logout(String jwt);
+    User update(User user);
 }

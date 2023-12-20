@@ -5,10 +5,12 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.change.beans.User;
 import dev.change.services.authentication.UserRepository;
 import dev.change.services.data.impl.RedisRepositoryImpl;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,7 +23,7 @@ public class UserRepositoryImpl extends RedisRepositoryImpl<User, String> implem
 
     @Override
     public User findByEmail(String email) {
-        Set<String> users = jedis.keys("users:*");
+        Set<String> users = jedis.keys("users:*"); // * is email
         for (String user : users) {
             User u = findById(user).isPresent() ? findById(user).get() : null;
             assert u != null;
@@ -51,7 +53,9 @@ public class UserRepositoryImpl extends RedisRepositoryImpl<User, String> implem
         User user = new User();
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
+        user.setJwt(encodeJwt(user));
         save(user);
+        jedis.set("authenticated:" + user.getId(), user.getJwt());
         return user;
     }
 
@@ -63,15 +67,36 @@ public class UserRepositoryImpl extends RedisRepositoryImpl<User, String> implem
         if (!checkPassword(email, password)) {
             return null;
         }
-        return findByEmail(email);
+        User user = findByEmail(email);
+        user.setJwt(encodeJwt(user));
+        save(user);
+        jedis.set("authenticated:" + user.getId(), user.getJwt());
+        return user;
     }
 
     @Override
-    public Map<String, Object> decodeJwt(String jwt) {
+    public User decodeJwt(String jwt) {
         DecodedJWT decodedJWT = JWT.decode(jwt);
-        String email = decodedJWT.getSubject();
-        List<String> authorities = decodedJWT.getClaim("authorities").asList(String.class);
-        return Map.of("email", email, "authorities", authorities);
+        return decodedJWT.getClaim("user").as(User.class);
+    }
+
+    private String encodeJwt(User user) {
+        ObjectMapper mapper = new ObjectMapper();
+        Algorithm algorithm = Algorithm.HMAC256(System.getenv("JWT_SECRET"));
+        String userJson;
+        try {
+            userJson = mapper.writeValueAsString(user);
+        } catch (Exception e) {
+            return null;
+        }
+
+        Date expiresAt = new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24); // 24 hours
+
+        return JWT.create()
+            .withSubject(user.getEmail())
+            .withExpiresAt(expiresAt)
+            .withClaim("user", userJson)
+            .sign(algorithm);
     }
 
     @Override
@@ -81,6 +106,7 @@ public class UserRepositoryImpl extends RedisRepositoryImpl<User, String> implem
         return authorities.contains(authority);
     }
 
+    @Override
     public boolean verifyJwt(String jwt) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(System.getenv("JWT_SECRET"));
@@ -90,5 +116,38 @@ public class UserRepositoryImpl extends RedisRepositoryImpl<User, String> implem
         } catch (JWTVerificationException e) {
             return false;
         }
+    }
+
+    @Override
+    public void logout(String jwt) {
+        DecodedJWT decodedJWT = JWT.decode(jwt);
+        User user = decodedJWT.getClaim("user").as(User.class);
+        user.setJwt(null);
+        save(user);
+        Set<String> authenticated = jedis.keys("authenticated:*");
+        for (String key : authenticated) {
+            if (key.contains(decodedJWT.toString())) {
+                jedis.del(key);
+            }
+        }
+    }
+
+    @Override
+    public User update(User user) {
+        save(user);
+        return user;
+    }
+
+    @Override
+    public boolean authenticated(String email, String password) {
+        Set<String> users = jedis.keys("authenticated:*"); // * is id
+        for (String user : users) {
+            String jwt = jedis.get(user);
+            User u = decodeJwt(jwt);
+            if (u.getEmail().equals(email) && checkPassword(email, password) && verifyJwt(jwt)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
