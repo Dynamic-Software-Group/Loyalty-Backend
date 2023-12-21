@@ -4,8 +4,8 @@
 !/target/site/jacoco/jacoco.xml
 
 # Ignore IDE-specific directories
-.vscode/
-.idea/
+.vscode
+.idea
 
 # Other common Java-related ignores
 *.class
