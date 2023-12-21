@@ -1,6 +1,5 @@
 /target/*
-!/target/*.jar
+!/target/site/jacoco/jacoco.xml
 !/target/newrelic/
 .vscode
 .idea
-!target/site/jacoco/jacoco.xml

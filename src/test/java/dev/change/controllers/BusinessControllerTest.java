@@ -8,7 +8,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class BusinessControllerTest {
+class BusinessControllerTest {
     @InjectMocks
     BusinessController businessController;
 
@@ -19,12 +19,12 @@ public class BusinessControllerTest {
     BusinessRepository businessRepository;
 
     @BeforeEach
-    public void init() {
+    void init() {
         MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    public void testCreateBusiness() {
+    void testCreateBusiness() {
 
     }
 

@@ -15,7 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.mockito.Mockito.when;
 
-public class UserControllerTest {
+class UserControllerTest {
     @InjectMocks
     UserController userController;
 
@@ -23,12 +23,12 @@ public class UserControllerTest {
     UserRepository userRepository;
 
     @BeforeEach
-    public void init() {
+    void init() {
         MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    public void testCreateUser() {
+    void testCreateUser() {
         String email = "test";
         String password = "test";
 
