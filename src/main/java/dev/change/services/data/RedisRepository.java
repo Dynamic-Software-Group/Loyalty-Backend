@@ -12,7 +12,7 @@ public interface RedisRepository<T, ID> extends CrudRepository<T, ID> {
     <S extends T> @NotNull Iterable<S> saveAll(@NotNull Iterable<S> entities);
     @NotNull Optional<T> findById(@NotNull ID id);
     boolean existsById(@NotNull ID id);
-    @NotNull Iterable<T> findAllById(@NotNull Iterable<ID> ids);
+    Iterable<T> findAllById(@NotNull Iterable<ID> ids);
     long count();
     void deleteById(@NotNull ID id);
     void delete(@NotNull T entity);

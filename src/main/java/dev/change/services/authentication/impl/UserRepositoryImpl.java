@@ -7,13 +7,14 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.change.beans.User;
+import dev.change.controllers.SecretHandler;
 import dev.change.services.authentication.UserRepository;
 import dev.change.services.data.impl.RedisRepositoryImpl;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.lang.reflect.Field;
+import java.util.*;
 
+import org.jetbrains.annotations.NotNull;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -53,6 +54,7 @@ public class UserRepositoryImpl extends RedisRepositoryImpl<User, String> implem
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
         user.setJwt(encodeJwt(user));
+        user.setId(SecretHandler.genId());
         save(user);
         jedis.set("authenticated:" + user.getId(), user.getJwt());
         return user;
@@ -132,8 +134,29 @@ public class UserRepositoryImpl extends RedisRepositoryImpl<User, String> implem
     }
 
     @Override
-    public User update(User user) {
-        save(user);
+    public User update(@NotNull User user) {
+        String userJson = jedis.get("users:" + user.getId());
+        ObjectMapper mapper = new ObjectMapper();
+        User currentUser;
+        try {
+            currentUser = mapper.readValue(userJson, User.class);
+        } catch (Exception e) {
+            return null;
+        }
+
+        Field[] fields = user.getClass().getDeclaredFields();
+        for (Field field : fields) {
+            field.setAccessible(true);
+            try {
+                if (field.get(user) != null) {
+                    field.set(currentUser, field.get(user));
+                }
+            } catch (Exception e) {
+                return null;
+            }
+        }
+
+        save(currentUser);
         return user;
     }
 

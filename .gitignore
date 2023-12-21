@@ -3,3 +3,4 @@
 !/target/newrelic/
 .vscode
 .idea
+!target/site/jacoco/jacoco.xml

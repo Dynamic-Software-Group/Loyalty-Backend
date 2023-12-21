@@ -1,5 +1,6 @@
 package dev.change.beans;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import dev.change.services.data.Identifiable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -25,6 +26,7 @@ public class Business implements Identifiable<String> {
     private URL website;
 
     @Override
+    @JsonIgnore
     public String getId() {
         return id;
     }
