@@ -11,5 +11,5 @@ jobs:
         uses: deepsourcelabs/test-coverage-action@master
         with:
           key: java
-          coverage-file: jacoco.xml
+          coverage-file: target/site/jacoco/jacoco.xml
           dsn: ${{ secrets.DEEPSOURCE_DSN }}
