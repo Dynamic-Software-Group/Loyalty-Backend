@@ -1,5 +1,20 @@
+# Ignore target directory, but allow specific subdirectories/files
 /target/*
+!/target/newrelic
 !/target/site/jacoco/jacoco.xml
-!/target/newrelic/
-.vscode
-.idea
+
+# Ignore IDE-specific directories
+.vscode/
+.idea/
+
+# Other common Java-related ignores
+*.class
+*.jar
+*.war
+*.ear
+*.log
+*.iml
+
+# Ignore build-related files
+build/
+bin/
