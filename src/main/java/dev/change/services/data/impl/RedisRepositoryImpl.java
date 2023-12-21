@@ -1,10 +1,13 @@
 package dev.change.services.data.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import dev.change.services.data.DatabaseConfig;
 import dev.change.services.data.Identifiable;
 import dev.change.services.data.RedisRepository;
 import org.jetbrains.annotations.NotNull;
-import redis.clients.jedis.JedisPooled;
+
+import redis.clients.jedis.Jedis;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -13,13 +16,11 @@ import java.util.Optional;
 
 @SuppressWarnings("unchecked")
 public class RedisRepositoryImpl<T extends Identifiable<ID>, ID> implements RedisRepository<T, ID> {
-    public final JedisPooled jedis;
+    // private final DatabaseConfig databaseConfig = new DatabaseConfig();
+    // public final Jedis jedis = databaseConfig.jedis();
+    public final Jedis jedis = null;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final Map<ID, Class<? extends T>> idClassMap = new HashMap<>();
-
-    public RedisRepositoryImpl() {
-        jedis = new JedisPooled("185.240.134.120", 6379);
-    }
 
     @NotNull
     @Override

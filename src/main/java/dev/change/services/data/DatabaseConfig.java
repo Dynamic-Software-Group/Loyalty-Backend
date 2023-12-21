@@ -1,15 +1,18 @@
 package dev.change.services.data;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import redis.clients.jedis.JedisPool;
 
+import redis.clients.jedis.DefaultJedisClientConfig;
+import redis.clients.jedis.Jedis;
 import javax.sql.DataSource;
 
 @Configuration
+@EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class})
 public class DatabaseConfig {
     private final String redisHost = "localhost";
 
@@ -25,7 +28,7 @@ public class DatabaseConfig {
 
     private final String sqlPassword = "test"; //TODO: Update
 
-    @Bean
+    // @Bean
     public DataSource dataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
@@ -35,13 +38,16 @@ public class DatabaseConfig {
         return dataSource;
     }
 
-    @Bean
+    // @Bean
     public JdbcTemplate jdbcTemplate() {
         return new JdbcTemplate(dataSource());
     }
 
-    @Bean
-    public JedisPool jedisPool() {
-        return new JedisPool(redisHost, redisPort);
+    // @Bean
+    public Jedis jedis() {
+        DefaultJedisClientConfig jedisPoolConfig = DefaultJedisClientConfig.builder()
+                .password(redisPassword)
+                .build();
+        return new Jedis(redisHost, redisPort, jedisPoolConfig);
     }
 }

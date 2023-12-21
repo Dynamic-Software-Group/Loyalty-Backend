@@ -2,7 +2,6 @@ package dev.change.services.data.storage;
 
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,10 +15,10 @@ import java.sql.*;
 public class ReplicationService {
     private static JdbcTemplate jdbcTemplate = null;
 
-    @Autowired
-    public ReplicationService(JdbcTemplate jdbcTemplate) {
-        ReplicationService.jdbcTemplate = jdbcTemplate;
-    }
+    // @Autowired
+    // public ReplicationService(JdbcTemplate jdbcTemplate) {
+    //     ReplicationService.jdbcTemplate = jdbcTemplate;
+    // }
 
     public static void insertData(String email, @NotNull JSONObject data) throws SQLException {
         String sql = "INSERT INTO data (email, data) VALUES (?, ?)";

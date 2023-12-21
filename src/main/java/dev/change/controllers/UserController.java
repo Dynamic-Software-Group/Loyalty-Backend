@@ -5,8 +5,10 @@ import dev.change.services.authentication.UserRepository;
 import lombok.AllArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Optional;
 
@@ -15,6 +17,7 @@ import java.util.Optional;
 public class UserController {
     private final UserRepository userRepository;
 
+    @Autowired
     public UserController(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
