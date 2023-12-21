@@ -30,7 +30,10 @@ public class ReplicationService {
     }
 
     public static @Nullable @Unmodifiable Object getData(String email) throws SQLException {
-        ResultSet resultSet = conn.createStatement().executeQuery("SELECT data FROM data WHERE email = '" + email + "'");
+        String query = "SELECT data FROM data WHERE email = ?";
+        PreparedStatement statement = conn.prepareStatement(query);
+        statement.setString(1, email);
+        ResultSet resultSet = statement.executeQuery();
         if (resultSet.next()) {
             return resultSet.getString("data");
         } else {
