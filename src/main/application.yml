@@ -3,3 +3,17 @@ sentry:
   # Set traces-sample-rate to 1.0 to capture 100% of transactions for performance monitoring.
   # We recommend adjusting this value in production.
   traces-sample-rate: 1.0
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  datasource:
+    url: jdbc:mysql://localhost:3306/mydb # TODO: Change
+    username: root
+    password: secret
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  redis:
+    host: localhost # TODO: Change
+    port: 6379
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
