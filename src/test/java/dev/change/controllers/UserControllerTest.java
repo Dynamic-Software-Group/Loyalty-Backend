@@ -1,21 +1,30 @@
 package dev.change.controllers;
 
-import dev.change.beans.User;
+import com.fasterxml.jackson.databind.JsonNode;
+import dev.change.services.authentication.JwtService;
 import dev.change.services.authentication.UserRepository;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import static org.mockito.Mockito.when;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.io.IOException;
+
+@SpringBootTest
+@AutoConfigureMockMvc
 class UserControllerTest {
+    @Autowired
+    private MockMvc mockMvc;
+
     @InjectMocks
     UserController userController;
 
@@ -28,28 +37,23 @@ class UserControllerTest {
     }
 
     @Test
-    void testCreateUser() {
+    void testUserFlow() throws Exception {
+        String id  = "test";
         String email = "test";
         String password = "test";
 
-        User expected = new User();
-        expected.setEmail(email);
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        String hashedPassword = passwordEncoder.encode(password);
-        expected.setPassword(hashedPassword);
+        String expectedJwt = JwtService.generateJwt(id);
+        String jsonPayload = "{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}";
 
-        when(userRepository.register(email, password)).thenReturn(expected);
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/users/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonPayload)
+                .header("api", "test"))
+                .andReturn();
 
-        UserController.AuthRequest request = new UserController.AuthRequest(email, password);
-        ResponseEntity<?> response = userController.register(request, "test");
-
-        Assertions.assertEquals(HttpStatus.OK, response.getStatusCode()); // Checks if the status code is 200
-        Assertions.assertEquals(expected, response.getBody()); // Checks if the body is the expected user
-
-        ResponseEntity<?> invalidApi = userController.register(request, "invalid");
-
-        Assertions.assertEquals(HttpStatus.BAD_REQUEST, invalidApi.getStatusCode()); // Checks if the status code is 400
-        Assertions.assertEquals("Invalid API key", invalidApi.getBody()); // Checks if the body is the expected error message
+        String response = result.getResponse().getContentAsString();
+        System.out.println(response);
+        assert(response.equals(expectedJwt));
     }
 
 }

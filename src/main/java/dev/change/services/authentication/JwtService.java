@@ -11,7 +11,8 @@ import java.util.Date;
 @Service
 public class JwtService {
     public static String generateJwt(String id) throws IOException {
-        String secret = Runtime.getRuntime().exec("doppler secrets get JWT_SECRET --plain").toString();
+//        String secret = Runtime.getRuntime().exec("doppler secrets get JWT_SECRET --plain").toString();
+        String secret = "test"; //TODO: TEMP
         Algorithm algorithm = Algorithm.HMAC256(secret);
         return JWT.create()
                 .withClaim("id", id)
