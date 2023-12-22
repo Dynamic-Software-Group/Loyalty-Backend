@@ -6,6 +6,10 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import dev.change.services.data.Identifiable;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.MapKeyColumn;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,13 +17,18 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
+@Entity
 public class User implements Identifiable<String> {
+    @Id
     private String id;
     private String username;
     private String password;
     private String email;
+    @ElementCollection
     private List<String> authorities;
     private String jwt;
+    @ElementCollection
+    @MapKeyColumn(name = "businessId")
     private Map<String, Integer> points; // Map<BusinessId, Points>
     private double latitude; // Get from frontend (may not be accurate)
     private double longitude; // ""

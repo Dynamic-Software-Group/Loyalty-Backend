@@ -14,7 +14,7 @@ import javax.sql.DataSource;
 @Configuration
 @EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class})
 public class DatabaseConfig {
-    private final String redisHost = "localhost";
+    private final String redisHost = "127.0.0.1";
 
     private final int redisPort = 6379;
 
@@ -45,9 +45,9 @@ public class DatabaseConfig {
 
     // @Bean
     public Jedis jedis() {
-        DefaultJedisClientConfig jedisPoolConfig = DefaultJedisClientConfig.builder()
-                .password(redisPassword)
-                .build();
-        return new Jedis(redisHost, redisPort, jedisPoolConfig);
+//        DefaultJedisClientConfig jedisPoolConfig = DefaultJedisClientConfig.builder()
+//                .password(redisPassword)
+//                .build();
+        return new Jedis(redisHost, redisPort);
     }
 }

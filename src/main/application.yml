@@ -13,11 +13,10 @@ spring:
     password: secret
     driver-class-name: com.mysql.cj.jdbc.Driver
   redis:
-    host: localhost # TODO: Change
+    host: 127.0.0.1 # TODO: Change
     port: 6379
   autoconfigure:
     exclude: org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
-  debug: true
   logging:
     level:
       org.springframework.boot.autoconfigure: DEBUG

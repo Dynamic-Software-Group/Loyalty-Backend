@@ -27,9 +27,9 @@ public class UserController {
         if (SecretHandler.notValid(api)) {
             return ResponseEntity.badRequest().body("Invalid API key");
         }
-        User user = userRepository.login(request.email, request.password);
-        if (user != null) {
-            return ResponseEntity.ok().body(user);
+        String jwt = userRepository.authenticate(request.email, request.password);
+        if (jwt != null) {
+            return ResponseEntity.ok().body(jwt);
         }
         return ResponseEntity.badRequest().body("Invalid credentials");
     }
@@ -42,23 +42,26 @@ public class UserController {
         if (userRepository.existsByEmail(request.email)) {
             return ResponseEntity.badRequest().body("User already exists");
         }
-        User user = userRepository.register(request.email, request.password);
-        if (user != null) {
-            return ResponseEntity.ok().body(user);
+        User user = new User();
+        user.setEmail(request.email);
+        user.setPassword(request.password);
+        String jwt = userRepository.set(user);
+        if (jwt != null) {
+            return ResponseEntity.ok().body(jwt);
         }
         return ResponseEntity.badRequest().body("User already exists");
     }
 
     @GetMapping("/get")
-    public ResponseEntity<Optional<Object>> getUser(@RequestParam String id, @RequestHeader String api) {
+    public ResponseEntity<?> getUser(@RequestParam String id, @RequestHeader String api) {
         if (SecretHandler.notValid(api)) {
             return ResponseEntity.badRequest().body(Optional.empty());
         }
-        @NotNull Optional<User> user = userRepository.findById(id);
-        if (user.isPresent()) {
+        User user = userRepository.lookup(id);
+        if (user != null) {
             return ResponseEntity.ok().body(Optional.of(user));
         }
-        return ResponseEntity.badRequest().body(Optional.of("Doesn't exist"));
+        return ResponseEntity.badRequest().body("Doesn't exist");
     }
 
     @PostMapping("/update")
@@ -67,7 +70,7 @@ public class UserController {
             return ResponseEntity.badRequest().body("Invalid API key");
         }
         if (userRepository.existsById(user.getId())) {
-            userRepository.save(user);
+            userRepository.set(user);
             return ResponseEntity.ok().body(user);
         }
         return ResponseEntity.badRequest().body("User doesn't exist");
@@ -78,10 +81,10 @@ public class UserController {
         if (SecretHandler.notValid(api)) {
             return ResponseEntity.badRequest().body("Invalid API key");
         }
-        if (userRepository.verifyJwt(jwt)) {
-            User user = userRepository.decodeJwt(jwt);
+        if (userRepository.authenticated(jwt)) {
+            User user = userRepository.lookup(userRepository.getId(jwt));
             user.addPoints(business_id, 1);
-            userRepository.save(user);
+            userRepository.set(user);
             return ResponseEntity.ok().body("OK");
         }
         return ResponseEntity.badRequest().body("Invalid JWT");
@@ -92,10 +95,10 @@ public class UserController {
         if (SecretHandler.notValid(api)) {
             return ResponseEntity.badRequest().body("Invalid API key");
         }
-        if (userRepository.verifyJwt(jwt)) {
-            User user = userRepository.decodeJwt(jwt);
+        if (userRepository.authenticated(jwt)) {
+            User user = userRepository.lookup(jwt);
             user.addPoints(business_id, value);
-            userRepository.save(user);
+            userRepository.set(user);
             return ResponseEntity.ok().body("OK");
         }
         return ResponseEntity.badRequest().body("Invalid JWT");
@@ -106,10 +109,10 @@ public class UserController {
         if (SecretHandler.notValid(api)) {
             return ResponseEntity.badRequest().body("Invalid API key");
         }
-        if (userRepository.verifyJwt(jwt)) {
-            User user = userRepository.decodeJwt(jwt);
+        if (userRepository.authenticated(jwt)) {
+            User user = userRepository.lookup(jwt);
             user.setPoints(business_id, value);
-            userRepository.save(user);
+            userRepository.set(user);
             return ResponseEntity.ok().body("OK");
         }
         return ResponseEntity.badRequest().body("Invalid JWT");
@@ -120,10 +123,10 @@ public class UserController {
         if (SecretHandler.notValid(api)) {
             return ResponseEntity.badRequest().body("Invalid API key");
         }
-        if (userRepository.verifyJwt(jwt)) {
-            User user = userRepository.decodeJwt(jwt);
+        if (userRepository.authenticated(jwt)) {
+            User user = userRepository.lookup(jwt);
             user.setPoints(business_id, 0);
-            userRepository.save(user);
+            userRepository.set(user);
             return ResponseEntity.ok().body("OK");
         }
         return ResponseEntity.badRequest().body("Invalid JWT");
@@ -134,10 +137,10 @@ public class UserController {
         if (SecretHandler.notValid(api)) {
             return ResponseEntity.badRequest().body("Invalid API key");
         }
-        if (userRepository.verifyJwt(jwt)) {
-            User user = userRepository.decodeJwt(jwt);
+        if (userRepository.authenticated(jwt)) {
+            User user = userRepository.lookup(jwt);
             user.removePoints(business_id, value);
-            userRepository.save(user);
+            userRepository.set(user);
             return ResponseEntity.ok().body("OK");
         }
         return ResponseEntity.badRequest().body("Invalid JWT");
@@ -148,9 +151,8 @@ public class UserController {
         if (SecretHandler.notValid(api)) {
             return ResponseEntity.badRequest().body("Invalid API key");
         }
-        if (userRepository.verifyJwt(jwt)) {
-            User user = userRepository.decodeJwt(jwt);
-            userRepository.deleteById(user.getId());
+        if (userRepository.authenticated(jwt)) {
+            userRepository.delete(jwt);
             return ResponseEntity.ok().body("OK");
         }
         return ResponseEntity.badRequest().body("Invalid JWT");
