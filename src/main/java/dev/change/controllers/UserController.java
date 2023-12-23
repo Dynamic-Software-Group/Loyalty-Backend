@@ -1,8 +1,12 @@
 package dev.change.controllers;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.change.beans.User;
 import dev.change.services.authentication.UserRepository;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import org.hibernate.sql.Update;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,11 +14,14 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/users")
 public class UserController {
+    private final ObjectMapper mapper = new ObjectMapper();
     private final UserRepository userRepository;
 
     @Autowired
@@ -23,7 +30,7 @@ public class UserController {
     }
 
     @PostMapping("/authenticate")
-    public ResponseEntity<?> authenticate(@RequestBody @NotNull AuthRequest request, @RequestHeader String api) {
+    public ResponseEntity<?> authenticate(@RequestBody @NotNull AuthRequest request, @RequestHeader("api") String api) {
         if (SecretHandler.notValid(api)) {
             return ResponseEntity.badRequest().body("Invalid API key");
         }
@@ -35,25 +42,29 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody @NotNull AuthRequest request, @RequestHeader String api) {
+    public ResponseEntity<?> register(@RequestBody @NotNull AuthRequest request, @RequestHeader("api") String api) {
         if (SecretHandler.notValid(api)) {
             return ResponseEntity.badRequest().body("Invalid API key");
         }
+        System.out.println("Request received");
         if (userRepository.existsByEmail(request.email)) {
             return ResponseEntity.badRequest().body("User already exists");
+        } else {
+            User user = new User();
+            user.setEmail(request.email);
+            user.setPassword(request.password);
+            user.setId(UUID.randomUUID().toString());
+            userRepository.logout(user.getJwt());
+            String jwt = userRepository.set(user);
+            if (jwt != null) {
+                return ResponseEntity.ok().body(jwt);
+            }
+            return ResponseEntity.internalServerError().body("Something went wrong");
         }
-        User user = new User();
-        user.setEmail(request.email);
-        user.setPassword(request.password);
-        String jwt = userRepository.set(user);
-        if (jwt != null) {
-            return ResponseEntity.ok().body(jwt);
-        }
-        return ResponseEntity.badRequest().body("User already exists");
     }
 
     @GetMapping("/get")
-    public ResponseEntity<?> getUser(@RequestParam String id, @RequestHeader String api) {
+    public ResponseEntity<?> getUser(@RequestParam String id, @RequestHeader("api") String api) {
         if (SecretHandler.notValid(api)) {
             return ResponseEntity.badRequest().body(Optional.empty());
         }
@@ -65,15 +76,22 @@ public class UserController {
     }
 
     @PostMapping("/update")
-    public ResponseEntity<?> updateUser(@RequestBody User user, @RequestHeader String api) {
+    public ResponseEntity<?> updateUser(@RequestBody UpdateRequest user, @RequestHeader String api) {
         if (SecretHandler.notValid(api)) {
             return ResponseEntity.badRequest().body("Invalid API key");
         }
-        if (userRepository.existsById(user.getId())) {
-            userRepository.set(user);
-            return ResponseEntity.ok().body(user);
+        if (userRepository.authenticated(user.jwt)) {
+            User providedUser = user.user;
+            providedUser.setJwt(user.jwt);
+            String updatedJwt = userRepository.set(providedUser);
+            return ResponseEntity.ok().body(Objects.requireNonNullElse(updatedJwt, "OK"));
         }
         return ResponseEntity.badRequest().body("User doesn't exist");
+    }
+
+    public static class UpdateRequest {
+        public String jwt;
+        public User user;
     }
 
     @PostMapping("/points/add/{business_id}")
@@ -159,6 +177,7 @@ public class UserController {
     }
 
     @AllArgsConstructor
+    @NoArgsConstructor
     public static class AuthRequest {
         public String email;
         public String password;

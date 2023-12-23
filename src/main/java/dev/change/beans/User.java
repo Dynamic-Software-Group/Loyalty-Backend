@@ -3,6 +3,7 @@ package dev.change.beans;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import dev.change.services.data.Identifiable;
@@ -16,8 +17,8 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @Entity
+@NoArgsConstructor
 public class User implements Identifiable<String> {
     @Id
     private String id;
@@ -75,7 +76,6 @@ public class User implements Identifiable<String> {
 
 
     @Override
-    @JsonIgnore
     public String getId() {
         return id;
     }

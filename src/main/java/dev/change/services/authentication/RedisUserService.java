@@ -4,13 +4,17 @@ import com.auth0.jwt.JWT;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.util.BeanUtil;
 import dev.change.beans.User;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.Field;
 import java.util.Objects;
 import java.util.Set;
 
@@ -27,9 +31,21 @@ public class RedisUserService implements UserRepository {
     }
 
     @Override
-    public String set(User user) {
-        String userJson = null;
+    public String set(@NotNull User user) {
+        String userJson;
         try {
+            if (getId(user.getJwt()) != null) {
+                User oldUser = getUser(user.getId());
+                User newUser = new User();
+
+                if (oldUser == null) {
+                    return null;
+                }
+
+                BeanUtils.copyProperties(oldUser, newUser);
+                BeanUtils.copyProperties(user, newUser);
+                user = newUser;
+            }
             userJson = mapper.writeValueAsString(user);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
@@ -40,17 +56,49 @@ public class RedisUserService implements UserRepository {
 
     @Override
     public String authenticate(String email, String password) {
+        System.out.println("Authenticating");
+        System.out.println(email + " " + password);
         try {
-            String id = Objects.requireNonNull(getUser(email)).getId();
+            User user = getUserByEmail(email);
+            if (user == null) {
+                return null;
+            }
+            Set<String> keys = redisTemplate.keys("authenticated:*");
+            assert keys != null;
+            for (String key : keys) {
+                String id = redisTemplate.opsForValue().get(key);
+                if (Objects.equals(id, user.getId())) {
+                    return key.split(":")[1];
+                }
+            }
+            String id = user.getId();
             String jwt = JwtService.generateJwt(id);
-            if (passwordEncoder.matches(password, Objects.requireNonNull(getUser(email)).getPassword())) {
-                redisTemplate.opsForValue().set("authenticated:" + id, jwt);
+            if (Objects.equals(password, user.getPassword())) {
+                redisTemplate.opsForValue().set("authenticated:" + jwt, id);
                 return jwt;
             }
             return null;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private @Nullable User getUserByEmail(String email) {
+        Set<String> keys = redisTemplate.keys("users:*");
+        assert keys != null;
+        for (String key : keys) {
+            String id = key.split(":")[1];
+            User user;
+            try {
+                user = getUser(id);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            if (user != null && user.getEmail().equals(email)) {
+                return user;
+            }
+        }
+        return null;
     }
 
     @Override
@@ -82,10 +130,7 @@ public class RedisUserService implements UserRepository {
     @Override
     public boolean logout(String jwt) {
         try {
-            User user = getUser(JWT.decode(jwt).getClaim("id").asString());
-            if (user != null) {
-                redisTemplate.delete("authenticated:" + user.getId());
-            }
+            redisTemplate.delete("authenticated:" + jwt);
             return true;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -95,7 +140,8 @@ public class RedisUserService implements UserRepository {
     @Override
     public boolean existsByEmail(String email) {
         try {
-            return getUser(email) != null;
+            User user = getUserByEmail(email);
+            return user != null;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -110,16 +156,18 @@ public class RedisUserService implements UserRepository {
         }
     }
 
-    private @Nullable User getUser(String id) throws Exception {
+    private @Nullable User getUser(String id) {
         Set<String> keys = redisTemplate.keys("users:*");
         assert keys != null;
-        for (String key : keys) {
-            String userJson = redisTemplate.opsForValue().get(key);
-            JsonNode jsonNode = mapper.readTree(userJson);
-            if (jsonNode.get("id").asText().equals(id)) {
-                return mapper.readValue(userJson, User.class);
+        String json = redisTemplate.opsForValue().get("users:" + id);
+        if (json != null) {
+            try {
+                return mapper.readValue(json, User.class);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
             }
         }
+        System.out.println(id);
         return null;
     }
 
@@ -134,15 +182,7 @@ public class RedisUserService implements UserRepository {
 
     @Override
     public boolean authenticated(String jwt) {
-        try {
-            User user = getUser(JWT.decode(jwt).getClaim("id").asString());
-            if (user != null) {
-                return Objects.equals(redisTemplate.opsForValue().get("authenticated:" + user.getId()), jwt);
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        return false;
+        return Boolean.TRUE.equals(redisTemplate.hasKey("authenticated:" + jwt));
     }
 
     @Override
@@ -153,7 +193,7 @@ public class RedisUserService implements UserRepository {
             for (String key : keys) {
                 String userJson = redisTemplate.opsForValue().get(key);
                 JsonNode jsonNode = mapper.readTree(userJson);
-                if (jsonNode.get("id").asText().equals(jwt)) {
+                if (jsonNode.get("jwt").asText().equals(jwt)) {
                     redisTemplate.delete(key);
                     logout(jwt);
                     return true;

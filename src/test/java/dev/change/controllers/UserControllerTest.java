@@ -53,6 +53,7 @@ class UserControllerTest {
 
         String response = result.getResponse().getContentAsString();
         System.out.println(response);
+        assert(result.getResponse().getStatus() == 200);
         assert(response.equals(expectedJwt));
     }
 
