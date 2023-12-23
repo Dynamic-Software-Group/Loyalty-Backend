@@ -21,11 +21,11 @@ import java.util.Set;
 @Service
 public class RedisUserService implements UserRepository {
     private final PasswordEncoder passwordEncoder;
-    private final RedisTemplate<String, String> redisTemplate;
+    private static RedisTemplate<String, String> redisTemplate = null;
     private final ObjectMapper mapper;
 
     public RedisUserService(RedisTemplate<String, String> redisTemplate, ObjectMapper mapper) {
-        this.redisTemplate = redisTemplate;
+        RedisUserService.redisTemplate = redisTemplate;
         this.mapper = mapper;
         this.passwordEncoder = new BCryptPasswordEncoder();
     }
@@ -34,23 +34,29 @@ public class RedisUserService implements UserRepository {
     public String set(@NotNull User user) {
         String userJson;
         try {
-            if (getId(user.getJwt()) != null) {
-                User oldUser = getUser(user.getId());
-                User newUser = new User();
+            String jwt = user.getJwt();
+            if (!(jwt == null)) {
+                if (getId(user.getJwt()) != null) {
+                    String id = getId(user.getJwt());
+                    User oldUser = getUser(id);
+                    User newUser = new User();
 
-                if (oldUser == null) {
-                    return null;
+                    if (oldUser == null) {
+                        return null;
+                    }
+
+                    BeanUtils.copyProperties(oldUser, newUser);
+                    BeanUtils.copyProperties(user, newUser);
+                    user = newUser;
+                    user.setId(id);
                 }
-
-                BeanUtils.copyProperties(oldUser, newUser);
-                BeanUtils.copyProperties(user, newUser);
-                user = newUser;
             }
             userJson = mapper.writeValueAsString(user);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-        redisTemplate.opsForValue().set("users:" + user.getId(), userJson);
+        String id = user.getId();
+        redisTemplate.opsForValue().set("users:" + id, userJson);
         return authenticate(user.getEmail(), user.getPassword());
     }
 
@@ -202,6 +208,14 @@ public class RedisUserService implements UserRepository {
             return false;
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static void logoutAll() {
+        Set<String> keys = redisTemplate.keys("authenticated:*");
+        assert keys != null;
+        for (String key : keys) {
+            redisTemplate.delete(key);
         }
     }
 }

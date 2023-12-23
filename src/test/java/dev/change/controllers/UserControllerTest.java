@@ -1,8 +1,11 @@
 package dev.change.controllers;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.change.services.authentication.JwtService;
 import dev.change.services.authentication.UserRepository;
+import org.json.JSONObject;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -17,8 +20,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-import java.io.IOException;
-
 @SpringBootTest
 @AutoConfigureMockMvc
 class UserControllerTest {
@@ -31,30 +32,99 @@ class UserControllerTest {
     @Mock
     UserRepository userRepository;
 
+    @Autowired
+    ObjectMapper mapper;
+
     @BeforeEach
     void init() {
         MockitoAnnotations.openMocks(this);
     }
 
+    String jwt;
+
     @Test
-    void testUserFlow() throws Exception {
-        String id  = "test";
-        String email = "test";
-        String password = "test";
-
-        String expectedJwt = JwtService.generateJwt(id);
-        String jsonPayload = "{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}";
-
-        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/users/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonPayload)
-                .header("api", "test"))
-                .andReturn();
-
-        String response = result.getResponse().getContentAsString();
-        System.out.println(response);
-        assert(result.getResponse().getStatus() == 200);
-        assert(response.equals(expectedJwt));
+    void register() {
+        String uri = "/users/register";
+        JSONObject request = new JSONObject();
+        request.put("email", "mock@gmail.com");
+        request.put("password", "mock");
+        try {
+            MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post(uri)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(request.toString())
+                    .header("api", "test"))
+                    .andReturn();
+            jwt = result.getResponse().getContentAsString();
+            Assertions.assertEquals(200, result.getResponse().getStatus());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
+    @Test
+    void logout() {
+        String uri = "/users/logout";
+        try {
+            MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post(uri)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(jwt)
+                    .header("api", "test"))
+                    .andReturn();
+            Assertions.assertEquals(200, result.getResponse().getStatus());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test
+    void authenticate() {
+        String uri = "/users/authenticate";
+        JSONObject request = new JSONObject();
+        request.put("email", "mock@gmail.com");
+        request.put("password", "mock");
+        try {
+            MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post(uri)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(request.toString())
+                    .header("api", "test"))
+                    .andReturn();
+            jwt = result.getResponse().getContentAsString();
+            Assertions.assertEquals(200, result.getResponse().getStatus());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test
+    void update() {
+        String uri = "/users/update";
+        JSONObject request = new JSONObject();
+        request.put("email", "updated@gmail.com");
+        request.put("password", "updated");
+        try {
+            MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post(uri)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(request.toString())
+                    .header("api", "test"))
+                    .andReturn();
+            Assertions.assertEquals(200, result.getResponse().getStatus());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test
+    void get() {
+        String uri = "/users/get";
+        try {
+            MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get(uri)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .param("jwt", jwt))
+                    .andReturn();
+            Assertions.assertEquals(200, result.getResponse().getStatus());
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

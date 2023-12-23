@@ -1,5 +1,6 @@
 package dev.change;
 
+import dev.change.services.authentication.RedisUserService;
 import dev.change.services.internal.events.FlagSubscriber;
 
 import org.springframework.boot.SpringApplication;
@@ -13,7 +14,10 @@ public class App {
         FlagSubscriber.subscribeAll();
         Runtime runtime = Runtime.getRuntime();
         runtime.addShutdownHook(
-                new Thread(App::syncDatabases)
+                new Thread(() -> {
+                    RedisUserService.logoutAll();
+                    App.syncDatabases();
+                })
         );
     }
 

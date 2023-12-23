@@ -1,6 +1,7 @@
 package dev.change.beans;
 
 import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -17,8 +18,8 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@Entity
 @NoArgsConstructor
+@Entity
 public class User implements Identifiable<String> {
     @Id
     private String id;
@@ -55,18 +56,34 @@ public class User implements Identifiable<String> {
     }
 
     public void addPoints(String businessId, int points) {
-        this.points.put(businessId, this.points.get(businessId) + points);
+        if (this.points == null) {
+            this.points = new HashMap<>();
+        }
+        this.points.put(businessId, getPoints(businessId) + points);
     }
 
     public void removePoints(String businessId, int points) {
+        if (this.points == null) {
+            this.points = new HashMap<>();
+        }
         this.points.put(businessId, this.points.get(businessId) - points);
     }
 
     public void setPoints(String businessId, int points) {
+        if (this.points == null) {
+            this.points = new HashMap<>();
+        }
         this.points.put(businessId, points);
+        System.out.println(this.points);
     }
 
     public int getPoints(String businessId) {
+        if (this.points == null) {
+            this.points = new HashMap<>();
+        }
+        if (!this.points.containsKey(businessId)) {
+            return 0;
+        }
         return this.points.get(businessId);
     }
 

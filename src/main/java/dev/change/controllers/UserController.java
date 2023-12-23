@@ -63,12 +63,23 @@ public class UserController {
         }
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@RequestBody String jwt, @RequestHeader("api") String api) {
+        if (SecretHandler.notValid(api)) {
+            return ResponseEntity.badRequest().body("Invalid API key");
+        }
+        if (userRepository.logout(jwt)) {
+            return ResponseEntity.ok().body("OK");
+        }
+        return ResponseEntity.badRequest().body("Invalid JWT");
+    }
+
     @GetMapping("/get")
-    public ResponseEntity<?> getUser(@RequestParam String id, @RequestHeader("api") String api) {
+    public ResponseEntity<?> getUser(@RequestParam String jwt, @RequestHeader("api") String api) {
         if (SecretHandler.notValid(api)) {
             return ResponseEntity.badRequest().body(Optional.empty());
         }
-        User user = userRepository.lookup(id);
+        User user = userRepository.lookup(userRepository.getId(jwt));
         if (user != null) {
             return ResponseEntity.ok().body(Optional.of(user));
         }
@@ -114,7 +125,7 @@ public class UserController {
             return ResponseEntity.badRequest().body("Invalid API key");
         }
         if (userRepository.authenticated(jwt)) {
-            User user = userRepository.lookup(jwt);
+            User user = userRepository.lookup(userRepository.getId(jwt));
             user.addPoints(business_id, value);
             userRepository.set(user);
             return ResponseEntity.ok().body("OK");
@@ -128,7 +139,7 @@ public class UserController {
             return ResponseEntity.badRequest().body("Invalid API key");
         }
         if (userRepository.authenticated(jwt)) {
-            User user = userRepository.lookup(jwt);
+            User user = userRepository.lookup(userRepository.getId(jwt));
             user.setPoints(business_id, value);
             userRepository.set(user);
             return ResponseEntity.ok().body("OK");
@@ -142,7 +153,7 @@ public class UserController {
             return ResponseEntity.badRequest().body("Invalid API key");
         }
         if (userRepository.authenticated(jwt)) {
-            User user = userRepository.lookup(jwt);
+            User user = userRepository.lookup(userRepository.getId(jwt));
             user.setPoints(business_id, 0);
             userRepository.set(user);
             return ResponseEntity.ok().body("OK");
@@ -156,7 +167,7 @@ public class UserController {
             return ResponseEntity.badRequest().body("Invalid API key");
         }
         if (userRepository.authenticated(jwt)) {
-            User user = userRepository.lookup(jwt);
+            User user = userRepository.lookup(userRepository.getId(jwt));
             user.removePoints(business_id, value);
             userRepository.set(user);
             return ResponseEntity.ok().body("OK");
