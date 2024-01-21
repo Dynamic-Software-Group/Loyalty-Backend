@@ -2,6 +2,7 @@ package dev.group.loyalty
 
 import dev.group.loyalty.endpoints.BusinessEndpoints
 import dev.group.loyalty.endpoints.UserEndpoints
+import dev.group.loyalty.logic.User
 import dev.group.loyalty.utils.BusinessRepository
 import dev.group.loyalty.utils.RedisRepository
 import dev.group.loyalty.utils.UserRepository

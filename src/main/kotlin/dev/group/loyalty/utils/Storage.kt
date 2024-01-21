@@ -21,8 +21,7 @@ class RedisRepository(private val redisTemplate: RedisTemplate<String, String>) 
     }
 
     fun valid(jwt: String): Boolean {
-        val index = redisTemplate.opsForList().indexOf("jwts", jwt)
-        return index != -1L
+        return redisTemplate.opsForList().range("jwts", 0, -1)?.contains(jwt) ?: false
     }
 
     fun delete(jwt: String) {

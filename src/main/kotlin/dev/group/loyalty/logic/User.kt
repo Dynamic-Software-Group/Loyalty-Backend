@@ -2,10 +2,10 @@ package dev.group.loyalty.logic
 
 import dev.group.loyalty.auth.CredHandler
 import dev.group.loyalty.auth.JwtUtils
+import dev.group.loyalty.beans.Points
 import dev.group.loyalty.endpoints.UserEndpoints
 import dev.group.loyalty.utils.RedisRepository
 import dev.group.loyalty.utils.UserRepository
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import dev.group.loyalty.beans.User as UserBean
 
@@ -24,6 +24,19 @@ class User(
         )
         userRepo.save(user)
         return user
+    }
+
+    fun addPoints(user: UserBean, points: Int, businessId: Int) {
+        val existingPoints = user.points.find { it.businessId == businessId }
+
+        if (existingPoints != null) {
+            existingPoints.points += points
+        } else {
+            val newPoints = Points(businessId = businessId, points = points)
+            user.points.add(newPoints)
+        }
+
+        userRepo.save(user)
     }
 
     fun getUser(id: Int): UserBean {

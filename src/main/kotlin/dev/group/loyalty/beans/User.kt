@@ -1,5 +1,6 @@
 package dev.group.loyalty.beans
 
+import com.fasterxml.jackson.annotation.JsonManagedReference
 import jakarta.persistence.*;
 
 @Entity
@@ -19,15 +20,15 @@ data class User(
     val ownsBusiness: Int = 0,
     @OneToMany(cascade = [CascadeType.ALL], orphanRemoval = true)
     @JoinColumn(name = "owner_id")
-    val businesses: List<Business> = listOf(),
+    @JsonManagedReference
+    val businesses: MutableList<Business> = mutableListOf(),
     @ManyToMany(mappedBy = "workers")
-    val workingForBusinesses: List<Business> = listOf(),
+    val workingForBusinesses: MutableList<Business> = mutableListOf(),
     @Column(name = "num_of_businesses_works_for")
     val numOfBusinessesWorksFor: Int = 0,
-    @Column(name = "num_points")
-    val numPoints: Int = 0,
-    @Column(name = "num_points_redeemed")
-    val numPointsRedeemed: Int = 0
+    @OneToMany(cascade = [CascadeType.ALL], orphanRemoval = true)
+    @Column(name = "points")
+    var points: MutableList<Points> = mutableListOf()
 )
 
 enum class Role {

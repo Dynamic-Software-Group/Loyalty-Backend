@@ -12,10 +12,6 @@ import org.springframework.stereotype.Component
 class JwtUtils {
     private val SECRET: String = "secret"
 
-    @Autowired
-    @Lazy
-    private lateinit var user: User
-
     fun encode(user: UserBean): String {
         try {
             val algorithm = Algorithm.HMAC256(SECRET)
@@ -30,7 +26,7 @@ class JwtUtils {
         }
     }
 
-    fun decode(jwt: String): UserBean {
+    fun decode(jwt: String, user: User): UserBean {
         try {
             val algorithm = Algorithm.HMAC256(SECRET)
             val verifier = JWT.require(algorithm)

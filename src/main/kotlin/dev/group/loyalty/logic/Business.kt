@@ -4,18 +4,15 @@ import dev.group.loyalty.auth.JwtUtils
 import dev.group.loyalty.beans.Business as BusinessBean
 import dev.group.loyalty.endpoints.BusinessEndpoints
 import dev.group.loyalty.utils.BusinessRepository
+import dev.group.loyalty.utils.RedisRepository
 import dev.group.loyalty.utils.UserRepository
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-class Business(private val businessRepo: BusinessRepository, private val userRepo: UserRepository) {
+class Business(private val businessRepo: BusinessRepository, private val userRepo: UserRepository, private val redisRepo: RedisRepository) {
     private val jwt = JwtUtils()
-    @Autowired
-    private lateinit var user: User
-
     fun createBusiness(jwt: String, request: BusinessEndpoints.BusinessCreateRequest): BusinessBean?  {
-        val user = this.jwt.decode(jwt);
+        val user = this.jwt.decode(jwt, User(userRepo, redisRepo));
         val business = BusinessBean(
             owner = user,
             name = request.name,
@@ -28,5 +25,11 @@ class Business(private val businessRepo: BusinessRepository, private val userRep
         )
         businessRepo.save(business)
         return business
+    }
+
+    fun deleteBusiness(jwt: String) {
+        val user = this.jwt.decode(jwt, User(userRepo, redisRepo))
+        val business = businessRepo.findAll().find { it.owner == user } ?: return
+        businessRepo.delete(business)
     }
 }
