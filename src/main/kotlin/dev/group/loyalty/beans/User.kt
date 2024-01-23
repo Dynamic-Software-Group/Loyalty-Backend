@@ -1,7 +1,7 @@
 package dev.group.loyalty.beans
 
 import com.fasterxml.jackson.annotation.JsonManagedReference
-import jakarta.persistence.*;
+import jakarta.persistence.*
 
 @Entity
 @Table(name = "users")

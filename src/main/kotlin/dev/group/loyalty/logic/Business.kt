@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component
 class Business(private val businessRepo: BusinessRepository, private val userRepo: UserRepository, private val redisRepo: RedisRepository) {
     private val jwt = JwtUtils()
     fun createBusiness(jwt: String, request: BusinessEndpoints.BusinessCreateRequest): BusinessBean?  {
-        val user = this.jwt.decode(jwt, User(userRepo, redisRepo));
+        val user = this.jwt.decode(jwt, User(userRepo, redisRepo))
         val business = BusinessBean(
             owner = user,
             name = request.name,

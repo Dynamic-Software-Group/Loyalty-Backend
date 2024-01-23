@@ -17,8 +17,8 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/business")
 class BusinessEndpoints @Autowired constructor(
-    private val businessRepo: BusinessRepository,
-    private val userRepo: UserRepository,
+    businessRepo: BusinessRepository,
+    userRepo: UserRepository,
     private val redisRepo: RedisRepository
 ){
     private val business = Business(businessRepo, userRepo, redisRepo)
@@ -31,7 +31,7 @@ class BusinessEndpoints @Autowired constructor(
 
     @DeleteMapping("/delete")
     fun deleteBusiness(@RequestHeader(HttpHeaders.AUTHORIZATION) jwt: String): ResponseEntity<Unit> {
-        if (!redisRepo.valid(jwt)) return ResponseEntity.badRequest().build()
+        if (!redisRepo.valid(jwt)) return ResponseEntity.status(403).build()
         business.deleteBusiness(jwt)
         return ResponseEntity.ok().build()
     }

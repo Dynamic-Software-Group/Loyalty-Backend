@@ -22,7 +22,6 @@ class JwtUtils {
             return token
         } catch (e: Exception) {
             throw RuntimeException(e)
-
         }
     }
 
